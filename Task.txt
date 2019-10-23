@@ -1,0 +1,95 @@
+Задания:
+
+1.       Технологии JQuery, JQuery UI.
+
+Написать страницу редактирования списка.
+
+Страница содержит таблицу со списком показателей (№, формулировка показателя, значение показателя – число).
+
+При заходе на страницу показатели асинхронно считываются с сервера. Предполагается, что сервер возвращает список в виде таблицы. На время демонстрации ответ сервера можно заменить функцией заглушкой. Таблицу можно сортировать по названию и по значениям показателей (для этого использовать расширение jquery.dataTables).
+
+На странице имеется кнопка (+), при клике на которую появляется диалог, который добавляет записи в таблицу. Записи отправляются на сервер и в случае удачи, динамически добавляются в существующую таблицу в самое ее начало.
+
+ 
+
+MS SQL
+
+2.       Объяснить запрос:
+
+ 
+
+SELECT sds.id, sds.name, sds.code
+
+FROM subdivision_groups AS sdgs
+
+JOIN subdivision_group AS sdg ON sdg.id = sdgs.id
+
+CROSS APPLY sdg.data.nodes('subdivision_group/subdivisions/subdivision/subdivision_id') s(i)
+
+LEFT JOIN subdivisions AS sds ON sds.id = s.i.value('.', 'bigint')
+
+WHERE sdgs.id = 6548690543860945
+
+ORDER BY sds.name
+
+ 
+
+ 
+
+WITH subs_tree (id, parent_object_id, lvl, name) AS
+
+(
+
+   SELECT sds.id, sds.parent_object_id, 0, sds.name
+
+   FROM subdivisions AS sds
+
+   WHERE sds.parent_object_id IN(65486954903, 7654765473245328, 543278675894325)
+
+   UNION ALL
+
+   SELECT sds.id, sds.parent_object_id, subs_tree.lvl + 1, sds.name
+
+   FROM subdivisions AS sds
+
+   JOIN subs_tree ON subs_tree.id = sds.parent_object_id
+
+)
+
+SELECT
+
+            st.id
+
+            ,st.parent_object_id AS parent
+
+            ,st.name AS name
+
+            ,st.lvl
+
+FROM subs_tree AS st
+
+ORDER BY st.lvl, parent, name, id   
+
+ 
+
+ 
+
+DECLARE @user_id bigint = 65469043695043;
+
+SELECT
+
+            DISTINCT
+
+            fms.object_id
+
+FROM func_managers AS fms
+
+JOIN boss_types AS bts ON bts.id = fms.boss_type_id
+
+WHERE
+
+            fms.person_id = @user_id
+
+            AND fms.catalog = 'subdivision'
+
+            AND bts.code IN('boss', 'subboss', 'hr')
